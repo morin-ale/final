@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harry Potter & Rick and Morty Characters</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lora:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #f4ecd8; /* Pergamino claro */
+            font-family: 'Lora', serif;
+            margin: 0;
+            border: 10px solid #4a0e0e; /* Borde burdeos */
+        }
+        header {
+            padding: 1rem;
+            display: flex;
+            justify-content: flex-end;
+            background-color: #4a0e0e; /* Burdeos oscuro */
+            border-bottom: 3px solid #d4a017; /* Dorado */
+        }
+        .search {
+            background-color: #f4ecd8; /* Pergamino */
+            border: 2px solid #d4a017; /* Dorado */
+            border-radius: 20px;
+            font-family: 'Lora', serif;
+            font-size: 15px;
+            padding: 0.5rem 1rem;
+            color: #2f2f2f; /* Gris oscuro */
+        }
+        .search::placeholder {
+            color: #8b7b5e; /* Marrón pergamino */
+        }
+        .search:focus {
+            outline: none;
+            background-color: #fff;
+            box-shadow: 0 0 5px #d4a017;
+        }
+        main {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .character {
+            width: 300px;
+            margin: 1rem;
+            background-color: #2f2f2f; /* Gris oscuro */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #d4a017; /* Borde dorado */
+            border-radius: 5px;
+            transition: transform 0.3s ease;
+        }
+        .character:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #d4a017; /* Brillo mágico */
+        }
+        .character-title {
+            background-color: #4a0e0e; /* Burdeos */
+            color: #d4a017; /* Dorado */
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            text-align: center;
+            padding: 1rem;
+            border-bottom: 2px solid #d4a017;
+        }
+        .character-info {
+            color: #f4ecd8; /* Crema */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.2rem;
+            padding: 0.5rem 1rem 1rem;
+            letter-spacing: 0.5px;
+            font-family: 'Lora', serif;
+        }
+        .character-info h3 {
+            margin-top: 0;
+            font-family: 'Cinzel', serif;
+            color: #d4a017;
+        }
+        .character-info span {
+            background-color: #4a0e0e; /* Burdeos */
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .character-info span.green {
+            color: #90ee90; /* Verde claro */
+        }
+        .character-info span.orange {
+            color: #ffa500; /* Naranja */
+        }
+        .character-info span.red {
+            color: #ff4040; /* Rojo */
+        }
+        .character-info span.blue {
+            color: #6495ed; /* Azul */
+        }
+        .character-info span.gray {
+            color: #a9a9a9; /* Gris */
+        }
+        .overview {
+            background-color: #f4ecd8; /* Pergamino */
+            color: #2f2f2f; /* Gris oscuro */
+            padding: 2rem;
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            max-height: 100%;
+            transform: translateY(101%);
+            overflow-y: auto;
+            transition: transform 0.3s ease-in;
+            border-top: 2px solid #d4a017;
+        }
+        .character:hover .overview {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <form id="form">
+            <input type="text" id="search" class="search" placeholder="Buscar Personajes">
+        </form>
+    </header>
+    <main id="main"></main>
+    <script>
+        const API_URLS = {
+            harrypotter: 'https://hp-api.onrender.com/api/characters',
+            rickandmorty: 'https://rickandmortyapi.com/api/character'
+        };
+
+        const main = document.getElementById('main');
+        const form = document.getElementById('form');
+        const search = document.getElementById('search');
+
+        getCharacters();
+
+        async function getCharacters(searchTerm = '') {
+            let characters = [];
+
+            try {
+                const hpRes = await fetch(API_URLS.harrypotter);
+                const hpData = await hpRes.json();
+                characters = characters.concat(hpData.map(char => ({ ...char, source: 'harrypotter' })));
+            } catch (error) {
+                console.error('Error fetching Harry Potter characters:', error);
+            }
+
+            try {
+                const rmUrl = searchTerm ? `${API_URLS.rickandmorty}?name=${searchTerm}` : API_URLS.rickandmorty;
+                const rmRes = await fetch(rmUrl);
+                const rmData = await rmRes.json();
+                characters = characters.concat((rmData.results || []).map(char => ({ ...char, source: 'rickandmorty' })));
+            } catch (error) {
+                console.error('Error fetching Rick and Morty characters:', error);
+            }
+
+            if (searchTerm) {
+                const lowerSearchTerm = searchTerm.toLowerCase();
+                characters = characters.filter(character => 
+                    character.name.toLowerCase().includes(lowerSearchTerm)
+                );
+            }
+
+            showCharacters(characters);
+        }
+
+        function showCharacters(characters) {
+            main.innerHTML = '';
+
+            characters.forEach((character) => {
+                if (character.source === 'harrypotter') {
+                    const { name, alternate_names, hogwartsStudent, house, actor } = character;
+                    const characterElement = document.createElement('div');
+                    characterElement.classList.add('character');
+                    characterElement.innerHTML = `
+                        <div class="character-title">${name}</div>
+                        <div class="character-info">
+                            <h3>${name}</h3>
+                            <span class="${getClassByHouse(house)}">${house || 'Sin Casa'}</span>
+                        </div>
+                        <div class="overview">
+                            <h3>Detalles</h3>
+                            <p><strong>Personaje:</strong> ${name}</p>
+                            <p><strong>Apodo:</strong> ${alternate_names.length > 0 ? alternate_names.join(', ') : 'Ninguno'}</p>
+                            <p><strong>Estudiante de Hogwarts:</strong> ${hogwartsStudent ? 'Sí' : 'No'}</p>
+                            <p><strong>Casa de Hogwarts:</strong> ${house || 'Ninguna'}</p>
+                            <p><strong>Interpretado por:</strong> ${actor || 'Desconocido'}</p>
+                        </div>
+                    `;
+                    main.appendChild(characterElement);
+                } else {
+                    const { name, status, species, gender } = character;
+                    const characterElement = document.createElement('div');
+                    characterElement.classList.add('character');
+                    characterElement.innerHTML = `
+                        <div class="character-title">${name}</div>
+                        <div class="character-info">
+                            <h3>${name}</h3>
+                            <span class="${getClassByRate(status)}">${status}</span>
+                        </div>
+                        <div class="overview">
+                            <h3>Detalles</h3>
+                            <p><strong>Nombre:</strong> ${name}</p>
+                            <p><strong>Estatus:</strong> ${status || 'Desconocido'}</p>
+                            <p><strong>Raza:</strong> ${species || 'Desconocida'}</p>
+                            <p><strong>Género:</strong> ${gender || 'Desconocido'}</p>
+                        </div>
+                    `;
+                    main.appendChild(characterElement);
+                }
+            });
+        }
+
+        function getClassByHouse(house) {
+            if (house === 'Gryffindor') {
+                return 'red';
+            } else if (house === 'Slytherin') {
+                return 'green';
+            } else if (house === 'Hufflepuff') {
+                return 'orange';
+            } else if (house === 'Ravenclaw') {
+                return 'blue';
+            } else {
+                return 'gray';
+            }
+        }
+
+        function getClassByRate(status) {
+            if (status === 'Alive') {
+                return 'green';
+            } else if (status === 'Dead') {
+                return 'red';
+            } else {
+                return 'gray';
+            }
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const searchTerm = search.value.trim();
+            if (searchTerm && searchTerm !== '') {
+                getCharacters(searchTerm);
+                search.value = '';
+            } else {
+                getCharacters();
+            }
+        });
+    </script>
+</body>
+</html>
